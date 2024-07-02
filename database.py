@@ -18,7 +18,7 @@ def main():
     parser.add_argument("--reset", action="store_true", help="Reset the database.")
     args = parser.parse_args()
     if args.reset:
-        print("✨ Clearing Database")
+        print(" Clearing Database")
         clear_database()
 
     # Create (or update) the data store.
@@ -57,7 +57,7 @@ def add_to_chroma(chunks: list[Document]):
     new_chunks = [chunk for chunk in chunks_with_ids if chunk.metadata["id"] not in existing_ids]
 
     if new_chunks:
-        print(f"👉 Adding new documents: {len(new_chunks)}")
+        print(f" Adding new documents: {len(new_chunks)}")
         # Split new_chunks into smaller batches and add each batch separately
         for i in range(0, len(new_chunks), MAX_BATCH_SIZE):
             batch = new_chunks[i:i + MAX_BATCH_SIZE]
@@ -65,7 +65,7 @@ def add_to_chroma(chunks: list[Document]):
             db.add_documents(batch, ids=new_chunk_ids)
         db.persist()
     else:
-        print("✅ No new documents to add")
+        print(" No new documents to add")
 
 def calculate_chunk_ids(chunks):
     last_page_id = None
