@@ -3,7 +3,7 @@
 
 ## Overview
 
-The RAG Chatbot for Document Comparison is a web application built using Streamlit and Python, designed to facilitate comparison and analysis of textual content extracted from PDF documents. It leverages natural language processing techniques and embedding models to provide insights based on user queries.
+The RAG model for Document Comparison is a web application built using Streamlit and Python, designed to facilitate comparison and analysis of textual content extracted from PDF documents. It leverages natural language processing techniques and embedding models to provide insights based on user queries.
 
 ## Features
 
