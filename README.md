@@ -12,26 +12,40 @@ The RAG model for Document Comparison is a web application built using Streamlit
 - **Semantic Search**: Uses embedding models to perform similarity searches across documents.
 - **Interactive Interface**: Web-based interface powered by Streamlit for user interaction.
 
-## Installation
+## Requirements
 
-### Prerequisites
-
-- Python 3.12.0 (or compatible version like 3.9.6)
+- Python 3.9+ (Python 3.12 is fine)
 - pip package manager
-
-### Setup
-
-1. Clone the repository:
+- Ollama CLI installed separately for `Ollama(model="mistral")`
    ```bash
-   git clone https://github.com/Lohithsurya/RAG-Chatbot-for-Document-Comparison.git
-   cd RAG-Chatbot-for-Document-Comparison
+   ollama --help
+   ```
 
-2. Install dependencies:
-   ```bash
+## Setup
+
+1. Create and activate a virtual environment:
+   ```powershell
+   python -m venv .venv
+   .venv\Scripts\Activate.ps1
+   python -m pip install --upgrade pip
+   ```
+
+2. Install project dependencies:
+   ```powershell
    pip install -r requirements.txt
-3. Run the application:
-   ```bash
-   streamlit run query.py
+   ```
 
-4. Access the web interface in your browser at http://localhost:8501.
-  
+3. Prepare the document database:
+   - Put PDF files into the `data/` folder
+   - Run:
+     ```powershell
+     python database.py
+     ```
+
+4. Start the app:
+   ```powershell
+   streamlit run query.py
+   ```
+
+5. Open the app in your browser at `http://localhost:8501`.
+
