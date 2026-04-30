@@ -8,7 +8,7 @@ __pycache__/
 venv/
 
 # Chroma database artifacts
-/chroma
+chroma/
 *.sqlite3
 
 # IDE/editor files
