@@ -1,19 +1,38 @@
+# Python cache and bytecode
 __pycache__/
 *.py[cod]
 *$py.class
 
+# Virtual environments
 .venv/
 venv/
 ENV/
 env/
+env.bak/
 
-chroma/
+# Chroma database artifacts
+/chroma
 *.sqlite3
 
-.DS_Store
-Thumbs.db
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+pip-wheel-metadata/
 
+# IDE/editor files
+.vscode/
+.idea/
+
+# Streamlit and logs
 .streamlit/
 *.log
 
-.vscode/
+# OS files
+.DS_Store
+Thumbs.db
+
+# Optional caches
+.pytest_cache/
+.cache/
