@@ -3,9 +3,13 @@ import os
 import shutil
 from langchain_community.document_loaders.pdf import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain.schema.document import Document
+from langchain_core.documents import Document
 from embedding import get_embedding_function
-from langchain_community.vectorstores.chroma import Chroma
+from langchain_chroma import Chroma
+
+'''
+The file reads PDFs from /data. It extracts the text, splits it into chunks and generates metadata for each chunk. This is converted to a vector using HuggingFace. Chroma is a vector database that provides APIs to use. It stores these vectors and metadata. When user asks a query, the query is embedded and the vector store finds the closest stored chunk to that query.
+'''
 
 CHROMA_PATH = "chroma"
 DATA_PATH = "data"
@@ -63,7 +67,6 @@ def add_to_chroma(chunks: list[Document]):
             batch = new_chunks[i:i + MAX_BATCH_SIZE]
             new_chunk_ids = [chunk.metadata["id"] for chunk in batch]
             db.add_documents(batch, ids=new_chunk_ids)
-        db.persist()
     else:
         print(" No new documents to add")
 

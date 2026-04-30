@@ -2,8 +2,8 @@ import streamlit as st
 import tempfile
 import os
 from PyPDF2 import PdfReader
-from langchain_community.vectorstores.chroma import Chroma
-from langchain.prompts import ChatPromptTemplate
+from langchain_chroma import Chroma
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.llms.ollama import Ollama
 from embedding import get_embedding_function
 
@@ -83,7 +83,7 @@ def main():
     query_text = st.text_input("Enter your query:")
     pdf_files = st.file_uploader("Upload PDF files", type=["pdf"], accept_multiple_files=True)
 
-    if st.button("Submit"):
+    if st.button("Submit PDF"):
         try:
             if pdf_files:
                 # Save the uploaded PDF files to temporary locations.

@@ -6,20 +6,10 @@ __pycache__/
 # Virtual environments
 .venv/
 venv/
-ENV/
-env/
-env.bak/
 
 # Chroma database artifacts
 /chroma
 *.sqlite3
-
-# Distribution / packaging
-build/
-dist/
-*.egg-info/
-*.egg
-pip-wheel-metadata/
 
 # IDE/editor files
 .vscode/
@@ -32,7 +22,3 @@ pip-wheel-metadata/
 # OS files
 .DS_Store
 Thumbs.db
-
-# Optional caches
-.pytest_cache/
-.cache/
