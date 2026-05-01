@@ -6,6 +6,15 @@ from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.llms.ollama import Ollama
 from embedding import get_embedding_function
+import logging
+
+
+logging.basicConfig(
+    filename="rag.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
 
 CHROMA_PATH = "chroma"
 
@@ -38,8 +47,9 @@ def query_rag(query_text: str, pdf_files=None):
     # Prepare the DB.
     embedding_function = get_embedding_function()
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
+    # this db is a LangChain wrapper around Chroma, this is the one providing the different helper methods
 
-    # Initialize document contexts.
+    # this is a dictionary to collect the content from at least 2 different documents since we are comparing
     doc_contexts = {}
 
     # If PDF files are uploaded, process each one.
@@ -49,7 +59,8 @@ def query_rag(query_text: str, pdf_files=None):
             doc_contexts[pdf_file.name] = pdf_text
 
     # Search the DB for relevant documents.
-    results = db.similarity_search_with_score(query_text, k=50)  # Increase k to get more documents
+    results = db.similarity_search_with_score(query_text, k=10)  # Increase k to get more documents
+    logging.info("chunk = ", results, "\n")
 
     # Filter results to ensure we get relevant content from two different documents.
     for doc, _score in results:
@@ -71,7 +82,8 @@ def query_rag(query_text: str, pdf_files=None):
     prompt = prompt_template.format(source1_context=context_text_doc1, source2_context=context_text_doc2, question=query_text)
 
     # Invoke the model.
-    model = Ollama(model="mistral")
+    # model = Ollama(model="mistral")
+    model = Ollama(model="phi3:mini")
     response_text = model.invoke(prompt)
 
     formatted_response = f"Response: {response_text}\nSources: {doc_ids}"
@@ -85,6 +97,7 @@ def main():
 
     if st.button("Submit PDF"):
         try:
+            logging.info("pdf_file exists", pdf_files)
             if pdf_files:
                 # Save the uploaded PDF files to temporary locations.
                 temp_pdf_files = []

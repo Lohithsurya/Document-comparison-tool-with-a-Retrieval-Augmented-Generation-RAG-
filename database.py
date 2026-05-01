@@ -6,10 +6,18 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from embedding import get_embedding_function
 from langchain_chroma import Chroma
+import logging
+
 
 '''
 The file reads PDFs from /data. It extracts the text, splits it into chunks and generates metadata for each chunk. This is converted to a vector using HuggingFace. Chroma is a vector database that provides APIs to use. It stores these vectors and metadata. When user asks a query, the query is embedded and the vector store finds the closest stored chunk to that query.
 '''
+
+logging.basicConfig(
+    filename="rag.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 CHROMA_PATH = "chroma"
 DATA_PATH = "data"
@@ -22,7 +30,7 @@ def main():
     parser.add_argument("--reset", action="store_true", help="Reset the database.")
     args = parser.parse_args()
     if args.reset:
-        print(" Clearing Database")
+        logging.info(" Clearing Database")
         clear_database()
 
     # Create (or update) the data store.
@@ -55,20 +63,20 @@ def add_to_chroma(chunks: list[Document]):
     # Add or Update the documents.
     existing_items = db.get(include=[])  # IDs are always included by default
     existing_ids = set(existing_items["ids"])
-    print(f"Number of existing documents in DB: {len(existing_ids)}")
+    logging.info(f"Number of existing documents in DB: {len(existing_ids)}")
 
     # Only add documents that don't exist in the DB.
     new_chunks = [chunk for chunk in chunks_with_ids if chunk.metadata["id"] not in existing_ids]
 
     if new_chunks:
-        print(f" Adding new documents: {len(new_chunks)}")
+        logging.info(f" Adding new documents: {len(new_chunks)}")
         # Split new_chunks into smaller batches and add each batch separately
         for i in range(0, len(new_chunks), MAX_BATCH_SIZE):
             batch = new_chunks[i:i + MAX_BATCH_SIZE]
             new_chunk_ids = [chunk.metadata["id"] for chunk in batch]
             db.add_documents(batch, ids=new_chunk_ids)
     else:
-        print(" No new documents to add")
+        logging.info(" No new documents to add")
 
 def calculate_chunk_ids(chunks):
     last_page_id = None
