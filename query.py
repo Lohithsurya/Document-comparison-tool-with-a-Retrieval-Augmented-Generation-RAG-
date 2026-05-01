@@ -7,6 +7,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.llms.ollama import Ollama
 from embedding import get_embedding_function
 import logging
+from database import split_documents, add_to_chroma, load_documents
+from collections import defaultdict
 
 
 logging.basicConfig(
@@ -19,20 +21,32 @@ logging.basicConfig(
 CHROMA_PATH = "chroma"
 
 COMPARISON_PROMPT_TEMPLATE = """
-Answer the following question by comparing the content from the two different sources provided.
+Compare the two sources below and answer the question directly with specific facts and figures from each source.
 
-Source 1 context:
+Source 1 {source1}:
 {source1_context}
 
-Source 2 context:
+Source 2 {source2}:
 {source2_context}
-
----
 
 Question: {question}
 
-Provide a detailed comparative answer based on the contexts above.
-"""
+Using the contexts above, answer with 1-2 relevant findings per source."""
+
+def process_uploaded_pdfs(pdf_files):
+    with st.status("📄 Processing uploaded PDFs...", expanded=True) as status:
+            for pdf_file in pdf_files:
+                # save to /data
+                save_path = os.path.join("data", pdf_file.name)
+                with open(save_path, "wb") as f:
+                    f.write(pdf_file.read())
+                status.write(f"Saved {pdf_file.name} to /data")
+            
+            # reindex the entire /data folder including new files
+            documents = load_documents()
+            chunks = split_documents(documents)
+            add_to_chroma(chunks)
+            status.update(label="✅ PDFs indexed into DB")
 
 def extract_text_from_pdf(file):
     with open(file.name, "rb") as f:
@@ -45,46 +59,52 @@ def extract_text_from_pdf(file):
 
 def query_rag(query_text: str, pdf_files=None):
     # Prepare the DB.
-    embedding_function = get_embedding_function()
-    db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
-    # this db is a LangChain wrapper around Chroma, this is the one providing the different helper methods
+    with st.status("🔍 Loading embedding model...", expanded=True) as status:
+        embedding_function = get_embedding_function()
+        status.update(label="✅ Embedding model loaded")
+    
+    with st.status("📚 Connecting to vector database...", expanded=True) as status:
+        db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
+        status.update(label="✅ Database connected")
 
     # this is a dictionary to collect the content from at least 2 different documents since we are comparing
-    doc_contexts = {}
+    source_chunks = defaultdict(list)
 
     # If PDF files are uploaded, process each one.
     if pdf_files:
-        for pdf_file in pdf_files:
-            pdf_text = extract_text_from_pdf(pdf_file)
-            doc_contexts[pdf_file.name] = pdf_text
+        process_uploaded_pdfs(pdf_files)
 
     # Search the DB for relevant documents.
-    results = db.similarity_search_with_score(query_text, k=10)  # Increase k to get more documents
-    logging.info("chunk = ", results, "\n")
+    results = db.similarity_search_with_score(query_text, k=15)
 
-    # Filter results to ensure we get relevant content from two different documents.
+    '''
+    The loop filter results to ensure we get relevant content from two different documents.
+    Improved retrieval logic by collecting top three chunks per document to increase context for model; the previous logic retrieved only one best chunk per document 
+    '''
     for doc, _score in results:
-        if len(doc_contexts) >= 2:
-            break
-        if doc.metadata.get("source") not in doc_contexts:
-            doc_contexts[doc.metadata.get("source")] = doc.page_content
+        source = doc.metadata.get("source")
 
-    if len(doc_contexts) < 2:
-        raise ValueError("Not enough distinct documents found for comparison.")
+        if len(source_chunks[source]) < 3:
+            source_chunks[source].append(doc.page_content)
+    
+    logging.info(f"size of source_chunks: {len(source_chunks)}")
 
     # Extract contexts.
-    doc_ids = list(doc_contexts.keys())
-    context_text_doc1 = doc_contexts[doc_ids[0]]
-    context_text_doc2 = doc_contexts[doc_ids[1]]
+    doc_ids = list(source_chunks.keys())[:2]
+    context_text_doc1 = "\n\n".join(source_chunks[doc_ids[0]])
+    context_text_doc2 = "\n\n".join(source_chunks[doc_ids[1]])
 
     # Create the comparison prompt.
     prompt_template = ChatPromptTemplate.from_template(COMPARISON_PROMPT_TEMPLATE)
-    prompt = prompt_template.format(source1_context=context_text_doc1, source2_context=context_text_doc2, question=query_text)
+    prompt = prompt_template.format(source1={doc_ids[0]}, source1_context=context_text_doc1, source2={doc_ids[1]}, source2_context=context_text_doc2, question=query_text)
 
     # Invoke the model.
-    # model = Ollama(model="mistral")
-    model = Ollama(model="phi3:mini")
-    response_text = model.invoke(prompt)
+    with st.status("🤖 Generating response with AI...", expanded=True) as status:
+        status.write("Sending query to Ollama...")
+        model = Ollama(model="llama3.2:3b")
+        status.write("Waiting for model response...")
+        response_text = model.invoke(prompt)
+        status.update(label="✅ Response generated")
 
     formatted_response = f"Response: {response_text}\nSources: {doc_ids}"
     return formatted_response
@@ -92,30 +112,18 @@ def query_rag(query_text: str, pdf_files=None):
 def main():
     st.title("RAG Chatbot for Document Comparison")
 
-    query_text = st.text_input("Enter your query:")
-    pdf_files = st.file_uploader("Upload PDF files", type=["pdf"], accept_multiple_files=True)
+    with st.form("query_form"):
+        query_text = st.text_input("Enter your query:", placeholder="Type your question here...")
+        pdf_files = st.file_uploader("Upload PDF files", type=["pdf"], accept_multiple_files=True)
+        submitted = st.form_submit_button("Submit Query", use_container_width=True)
 
-    if st.button("Submit PDF"):
+    if submitted:
         try:
-            logging.info("pdf_file exists", pdf_files)
-            if pdf_files:
-                # Save the uploaded PDF files to temporary locations.
-                temp_pdf_files = []
-                for pdf_file in pdf_files:
-                    with tempfile.NamedTemporaryFile(delete=False) as temp_pdf:
-                        temp_pdf.write(pdf_file.read())
-                    temp_pdf_files.append(temp_pdf)
+            if query_text.strip() == "":
+                st.error("Please enter a query.")
+                return
 
-                # Perform query with uploaded PDF files.
-                response = query_rag(query_text, pdf_files=temp_pdf_files)
-
-                # Remove temporary files after use.
-                for temp_pdf in temp_pdf_files:
-                    os.remove(temp_pdf.name)
-            else:
-                # Perform query without uploaded PDF files.
-                response = query_rag(query_text)
-
+            response = query_rag(query_text, pdf_files=pdf_files if pdf_files else None)
             st.text(response)
         except ValueError as e:
             st.error(str(e))

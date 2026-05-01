@@ -12,3 +12,4 @@ ollama
 torchvision
 langchain-huggingface
 sentence-transformers
+pypdf
