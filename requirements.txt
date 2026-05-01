@@ -10,3 +10,5 @@ PyPDF2
 chromadb
 ollama
 torchvision
+langchain-huggingface
+sentence-transformers
