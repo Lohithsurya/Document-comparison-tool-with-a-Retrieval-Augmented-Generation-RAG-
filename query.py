@@ -33,6 +33,10 @@ Question: {question}
 
 Using the contexts above, answer with 1-2 relevant findings per source."""
 
+@st.cache_resource
+def load_embedding_function():
+    return get_embedding_function()
+
 def process_uploaded_pdfs(pdf_files):
     with st.status("📄 Processing uploaded PDFs...", expanded=True) as status:
             for pdf_file in pdf_files:
@@ -60,7 +64,7 @@ def extract_text_from_pdf(file):
 def query_rag(query_text: str, pdf_files=None):
     # Prepare the DB.
     with st.status("🔍 Loading embedding model...", expanded=True) as status:
-        embedding_function = get_embedding_function()
+        embedding_function = load_embedding_function()
         status.update(label="✅ Embedding model loaded")
     
     with st.status("📚 Connecting to vector database...", expanded=True) as status:
@@ -77,10 +81,9 @@ def query_rag(query_text: str, pdf_files=None):
     # Search the DB for relevant documents.
     results = db.similarity_search_with_score(query_text, k=15)
 
-    '''
-    The loop filter results to ensure we get relevant content from two different documents.
-    Improved retrieval logic by collecting top three chunks per document to increase context for model; the previous logic retrieved only one best chunk per document 
-    '''
+    # The loop filter results to ensure we get relevant content from two different documents.
+    # Improved retrieval logic by collecting top three chunks per document to increase context for model; the previous logic retrieved only one best chunk per document 
+    
     for doc, _score in results:
         source = doc.metadata.get("source")
 
@@ -100,9 +103,7 @@ def query_rag(query_text: str, pdf_files=None):
 
     # Invoke the model.
     with st.status("🤖 Generating response with AI...", expanded=True) as status:
-        status.write("Sending query to Ollama...")
         model = Ollama(model="llama3.2:3b")
-        status.write("Waiting for model response...")
         response_text = model.invoke(prompt)
         status.update(label="✅ Response generated")
 

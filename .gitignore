@@ -22,3 +22,5 @@ chroma/
 # OS files
 .DS_Store
 Thumbs.db
+
+temp_file_data
