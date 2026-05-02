@@ -3,9 +3,9 @@ import os
 import shutil
 from langchain_community.document_loaders.pdf import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain.schema.document import Document
+from langchain_core.documents import Document
 from embedding import get_embedding_function
-from langchain_community.vectorstores.chroma import Chroma
+from langchain_chroma import Chroma
 
 CHROMA_PATH = "chroma"
 DATA_PATH = "data"
