@@ -1,0 +1,15 @@
+streamlit
+langchain
+langchain-core
+langchain-chroma
+langchain-community
+langchain-text-splitters
+transformers
+torch
+PyPDF2
+chromadb
+ollama
+torchvision
+langchain-huggingface
+sentence-transformers
+pypdf

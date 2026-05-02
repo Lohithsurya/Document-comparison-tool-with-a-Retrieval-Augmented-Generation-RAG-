@@ -1,0 +1,26 @@
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+
+# Chroma database artifacts
+chroma/
+*.sqlite3
+
+# IDE/editor files
+.vscode/
+.idea/
+
+# Streamlit and logs
+.streamlit/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+temp_file_data
