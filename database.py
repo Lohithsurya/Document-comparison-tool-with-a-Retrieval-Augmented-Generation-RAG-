@@ -1,12 +1,12 @@
-import argparse
-import os
-import shutil
 from langchain_community.document_loaders.pdf import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from embedding import get_embedding_function
 from langchain_chroma import Chroma
 import logging
+import argparse
+import os
+import shutil
 
 
 '''
@@ -36,12 +36,12 @@ def main():
         clear_database()
 
     # Create (or update) the data store.
-    documents = load_documents()
-    chunks = split_documents(documents)
+    documents: list[Document] = load_documents()
+    chunks: list[Document] = split_documents(documents)
     add_to_chroma(chunks)
 
-def load_documents():
-    document_loader = PyPDFDirectoryLoader(DATA_PATH)
+def load_documents() -> list[Document]:
+    document_loader: PyPDFDirectoryLoader = PyPDFDirectoryLoader(DATA_PATH)
     return document_loader.load()
 
 def split_documents(documents: list[Document]):

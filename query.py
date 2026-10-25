@@ -1,14 +1,13 @@
-import streamlit as st
-import tempfile
-import os
-from PyPDF2 import PdfReader
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_community.llms.ollama import Ollama
+from langchain_ollama import OllamaLLM
 from embedding import get_embedding_function
-import logging
 from database import split_documents, add_to_chroma, load_documents
 from collections import defaultdict
+import streamlit as st
+import os
+import logging
 
 
 logging.basicConfig(
@@ -52,18 +51,9 @@ def process_uploaded_pdfs(pdf_files):
             add_to_chroma(chunks)
             status.update(label="✅ PDFs indexed into DB")
 
-def extract_text_from_pdf(file):
-    with open(file.name, "rb") as f:
-        pdf = PdfReader(f)
-        text = ""
-        for page_num in range(len(pdf.pages)):
-            page = pdf.pages[page_num]
-            text += page.extract_text()
-        return text
-
 def query_rag(query_text: str, pdf_files=None):
     # Prepare the DB.
-    embedding_function = load_embedding_function()
+    embedding_function: HuggingFaceEmbeddings = load_embedding_function()
     
     with st.status("📚 Connecting to vector database...", expanded=True) as status:
         db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
@@ -101,7 +91,7 @@ def query_rag(query_text: str, pdf_files=None):
 
     # Invoke the model.
     with st.status("🤖 Generating response with AI...", expanded=True) as status:
-        model = Ollama(model="llama3.2:3b")
+        model = OllamaLLM(model="llama3.2:3b")
         response_text = model.invoke(prompt)
         status.update(label="✅ Response generated")
 
@@ -122,7 +112,7 @@ def main():
                 st.error("Please enter a query.")
                 return
 
-            response = query_rag(query_text, pdf_files=pdf_files if pdf_files else None)
+            response: str = query_rag(query_text, pdf_files=pdf_files if pdf_files else None)
             st.text(response)
         except ValueError as e:
             st.error(str(e))
