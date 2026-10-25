@@ -63,9 +63,7 @@ def extract_text_from_pdf(file):
 
 def query_rag(query_text: str, pdf_files=None):
     # Prepare the DB.
-    with st.status("🔍 Loading embedding model...", expanded=True) as status:
-        embedding_function = load_embedding_function()
-        status.update(label="✅ Embedding model loaded")
+    embedding_function = load_embedding_function()
     
     with st.status("📚 Connecting to vector database...", expanded=True) as status:
         db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
