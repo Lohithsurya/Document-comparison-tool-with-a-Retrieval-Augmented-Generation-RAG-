@@ -2,10 +2,10 @@ import streamlit as st
 import tempfile
 import os
 from PyPDF2 import PdfReader
-from langchain_community.vectorstores.chroma import Chroma
-from langchain.prompts import ChatPromptTemplate
 from langchain_community.llms.ollama import Ollama
 from embedding import get_embedding_function
+from langchain_chroma import Chroma
+from langchain_core.prompts import ChatPromptTemplate
 
 CHROMA_PATH = "chroma"
 
