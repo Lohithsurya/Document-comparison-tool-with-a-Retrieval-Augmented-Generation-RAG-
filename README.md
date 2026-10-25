@@ -47,15 +47,14 @@ The RAG model for Document Comparison is a web application built using Streamlit
    streamlit run query.py
    ```
 
-5. Open the app in your browser at `http://localhost:8501`.
-
+4. Open the app in your browser at `http://localhost:8501`.
 
 ## RAG Understanding
 
 RAG (Retrieval-Augmented Generation) is an architecture pattern whose pipeline looks like this:
 
-1. Embedding model (being used here, `sentence-transformers/all-MiniLM-L12-v2`) converts your documents into vectors and stores them in a vector database
-2. When a query comes in, the same embedding model converts the query into a vector
-3. A similarity search (being used here, `cosine similarity`) finds the most relevant document chunks
-4. Those chunks are injected into the LLM's context as extra information
-5. The LLM (being used here, `llama3.2:3b`) generates a response grounded in that retrieved content
+- Embedding model (being used here, `sentence-transformers/all-MiniLM-L12-v2`) converts your documents into vectors and stores them in a vector database
+- When a query comes in, the same embedding model converts the query into a vector
+- A similarity search (being used here, `cosine similarity`) finds the most relevant document chunks
+- Those chunks are injected into the LLM's context as extra information
+- The LLM (being used here, `llama3.2:3b`) generates a response grounded in that retrieved content
